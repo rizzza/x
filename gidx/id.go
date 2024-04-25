@@ -179,6 +179,21 @@ func (p *PrefixedID) Scan(v any) error {
 	return nil
 }
 
+// Validate implements the ent.FieldValidator interface
+func (p PrefixedID) Validate() error {
+	if _, err := Parse(string(p)); err != nil {
+		return err
+	}
+
+	if len(string(p)) > 0 {
+		if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(string(p)) {
+			return newErrInvalidID("valid characters are A-Z a-z 0-9 _ -")
+		}
+	}
+
+	return nil
+}
+
 // MarshalGQL provides GraphQL marshaling so that PrefixedIDs can be returned
 // in GraphQL results transparently. Only types that map to a string are supported.
 func (p PrefixedID) MarshalGQL(w io.Writer) {

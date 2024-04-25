@@ -142,3 +142,30 @@ func TestMarshalGQL(t *testing.T) {
 	id.MarshalGQL(&b)
 	assert.Equal(t, fmt.Sprintf(`"%s"`, string(id)), b.String())
 }
+
+func TestValidate(t *testing.T) {
+	cases := []struct {
+		name     string
+		id       string
+		errorMsg string
+	}{
+		{name: "valid id: null id should be valid", id: ""},
+		{name: "valid id", id: string(gidx.MustNewID("testing"))},
+		{name: "invalid id: bad characters", id: "testing-<%", errorMsg: "valid characters are A-Z a-z 0-9 _ -"},
+		{name: "invalid id: whitespace", id: "testing-   ", errorMsg: "valid characters are A-Z a-z 0-9 _ -"},
+	}
+
+	t.Run("Test Validate", func(t *testing.T) {
+		for _, tt := range cases {
+			t.Run(tt.name, func(t *testing.T) {
+				err := gidx.PrefixedID(tt.id).Validate()
+				if tt.errorMsg == "" {
+					assert.NoError(t, err)
+				} else {
+					assert.Error(t, err)
+					assert.ErrorContains(t, err, tt.errorMsg)
+				}
+			})
+		}
+	})
+}
